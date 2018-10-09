@@ -151,6 +151,10 @@ const Kite = {
     this.disposables.push(vscode.workspace.onDidChangeConfiguration(() => {
       Logger.LEVEL = Logger.LEVELS[vscode.workspace.getConfiguration('kite').loggingLevel.toUpperCase()];
     }));
+    
+    this.disposables.push(vscode.workspace.onDidCloseTextDocument((doc) => {
+      console.log(`${doc.fileName} closed`);
+    }));
 
     this.disposables.push(vscode.window.onDidChangeActiveTextEditor(e => {
       if (e) {
