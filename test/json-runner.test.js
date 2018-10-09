@@ -55,7 +55,7 @@ function pathsSetup(setup) {
 
 const featureSet = require(featureSetPath());
 
-describe('JSON tests', () => {
+describe.only('JSON tests', () => {
   featureSet.forEach(feature => {
     walk(jsonPath('tests', feature), (testFile) => {
       buildTest(require(testFile), testFile);
@@ -72,7 +72,7 @@ function buildTest(data, file) {
     let spy;
 
     beforeEach('package activation', () => {
-      // console.log(`------------------------------------\n start ${data.description}\n------------------------------------`);
+      console.log(`------------------------------------\n start ${data.description}\n------------------------------------`);
       spy = sinon.spy(KiteAPI, 'request');
       kite._activate();
     })
@@ -80,12 +80,13 @@ function buildTest(data, file) {
       spy.restore();
       kite.deactivate();
       
-      // console.log(`------------------------------------\n end ${data.description}\n------------------------------------`);
+      console.log(`------------------------------------\n end ${data.description}\n------------------------------------`);
       return clearWorkspace();
       function clearWorkspace() {
         if(vscode.window.activeTextEditor) {
           return vscode.commands.executeCommand('workbench.action.closeActiveEditor').then(clearWorkspace);
         } else {
+          console.log('workspace cleaned');
           return;
         }
       }
