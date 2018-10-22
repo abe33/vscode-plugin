@@ -223,7 +223,7 @@ const Kite = {
     }));
 
     this.disposables.push(vscode.commands.registerCommand('kite.login', () => {
-      vscode.commands.executeCommand('vscode.previewHtml', 'kite-vscode-login://login', vscode.ViewColumn.Two, 'Kite Login');
+      kiteOpen('kite://home');
     })); 
        
     this.disposables.push(vscode.commands.registerCommand('kite.install', () => {
@@ -237,7 +237,7 @@ const Kite = {
     }));
     
     this.disposables.push(vscode.commands.registerCommand('kite.open-copilot', () => {
-      kiteOpen('kite://open')
+      kiteOpen('kite://open');
     }));
     
     this.disposables.push(vscode.commands.registerCommand('kite.open-permissions', () => {
@@ -518,8 +518,7 @@ const Kite = {
             this.checkConnectivity().then(() => {
               this.showErrorMessage('You need to login to the Kite engine', 'Login').then(item => {
                 if (item) {
-                  // opn('http://localhost:46624/settings');
-                  vscode.commands.executeCommand('vscode.previewHtml', 'kite-vscode-login://login', vscode.ViewColumn.Two, 'Kite Login');
+                  kiteOpen('kite://home');
                 }
               });
             })
