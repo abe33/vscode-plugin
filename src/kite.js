@@ -4,14 +4,12 @@ const vscode = require('vscode');
 const os = require('os');
 const opn = require('opn');
 const KiteAPI = require('kite-api');
-const https = require('https');
 const {AccountManager, Logger} = require('kite-installer');
 const {PYTHON_MODE, NEW_PYTHON_MODE, JAVASCRIPT_MODE, ERROR_COLOR, WARNING_COLOR, SUPPORTED_EXTENSIONS} = require('./constants');
 const KiteHoverProvider = require('./hover');
 const KiteCompletionProvider = require('./completion');
 const KiteSignatureProvider = require('./signature');
 const KiteDefinitionProvider = require('./definition');
-const KiteLogin = require('./login');
 const KiteInstall = require('./install');
 const KiteStatus = require('./status');
 const KiteTour = require('./tour');
@@ -62,7 +60,6 @@ const Kite = {
       }
     })
 
-    const login = new KiteLogin(Kite);
     const install = new KiteInstall(Kite);
     const status = new KiteStatus(Kite);
     const tour = new KiteTour(Kite);
@@ -102,8 +99,6 @@ const Kite = {
 
     server.start();
 
-    this.disposables.push(
-      vscode.workspace.registerTextDocumentContentProvider('kite-vscode-login', login));
     this.disposables.push(
       vscode.workspace.registerTextDocumentContentProvider('kite-vscode-install', install));
     this.disposables.push(
