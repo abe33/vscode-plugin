@@ -1,15 +1,32 @@
 'use strict';
 
-const vscode = require('vscode');
+const fs = require('fs-plus');
 const path = require('path');
+const vscode = require('vscode');
 const KiteAPI = require('kite-api');
 const {jsonPath} = require('../utils');
 const {waitsFor} = require('../../helpers');
-const {kite} = require('../../../src/kite');
 
-module.exports = (action) => {
+module.exports = ({action, root}) => {
   beforeEach('open action', () => { 
-    return vscode.window.showTextDocument(vscode.Uri.file(jsonPath(action.properties.file)))
+    const filename = path.join(root(), action.properties.file);
+    
+    return new Promise((resolve, reject) => {
+      fs.makeTree(path.dirname(filename), (err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        fs.copyFile(jsonPath(action.properties.file), filename, (err) => {
+          if(err) {
+            return reject(err);
+          }
+
+          resolve();
+        });
+      })
+    })
+    .then(() => vscode.window.showTextDocument(vscode.Uri.file(filename)))
     .then((editor) => {
       const newPosition = new vscode.Position(0, 0);
       const newSelection = new vscode.Selection(newPosition, newPosition);

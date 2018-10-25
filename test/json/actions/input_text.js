@@ -4,7 +4,7 @@ const vscode = require('vscode');
 
 let sigCalled = false;
 let alphaCompletionCalled = false;
-module.exports = (action) => {
+module.exports = ({action}) => {
   afterEach(() => {
     sigCalled = false;
     alphaCompletionCalled = false;

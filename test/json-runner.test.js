@@ -1,14 +1,15 @@
 'use strict';
 
+const temp = require('@atom/temp').track();
+const fsp = require('fs-plus');
 const path = require('path');
 const {kite} = require('../src/kite');
 const sinon = require('sinon');
 const vscode = require('vscode');
 const KiteAPI = require('kite-api');
 const {jsonPath, walk, describeForTest, featureSetPath} = require('./json/utils');
-const {withKite, withKitePaths, withKiteRoutes} = require('kite-api/test/helpers/kite');
+const {withKite, withKitePaths, withKiteRoutes, updateKitePaths} = require('kite-api/test/helpers/kite');
 const {fakeResponse} = require('kite-api/test/helpers/http');
-
 const ACTIONS = {};
 const EXPECTATIONS = {};
 
@@ -45,11 +46,11 @@ function kiteSetup(setup) {
   }
 }
 
-function pathsSetup(setup) {
+function pathsSetup(setup, root) {
   return {
-    whitelist: setup.whitelist && setup.whitelist.map(p => jsonPath(p)),
-    blacklist: setup.blacklist && setup.blacklist.map(p => jsonPath(p)),
-    ignored: setup.ignored && setup.ignored.map(p => jsonPath(p)),
+    whitelist: setup.whitelist && setup.whitelist.map(p => path.join(root(), p)),
+    blacklist: setup.blacklist && setup.blacklist.map(p => path.join(root(), p)),
+    ignored: setup.ignored && setup.ignored.map(p => path.join(root(), p)),
   };
 }
 
@@ -69,10 +70,13 @@ function buildTest(data, file) {
   }
 
   describeForTest(data, `${data.description} ('${file}')`, () => {
-    let spy;
+    let spy, rootDirPath;
+
+    const root = () => rootDirPath;
 
     beforeEach('package activation', () => {
       console.log(`------------------------------------\n start ${data.description}\n------------------------------------`);
+      rootDirPath = fsp.absolute(temp.mkdirSync('kite'));
       spy = sinon.spy(KiteAPI, 'request');
       kite._activate();
     })
@@ -82,24 +86,27 @@ function buildTest(data, file) {
       
       console.log(`------------------------------------\n end ${data.description}\n------------------------------------`);
       return clearWorkspace();
-      function clearWorkspace() {
-        if(vscode.window.activeTextEditor) {
-          return vscode.commands.executeCommand('workbench.action.closeActiveEditor')
-          .then(() => {
-            let resolve, reject, timeout;
-            const d = vscode.workspace.onDidCloseTextDocument((e) => {
-              d.dispose();
-              clearTimeout(timeout);
-              resolve();
-            });
-            return new Promise((r1, r2) => {
-              resolve = r1;
-              reject = r2;
 
-              timeout = setTimeout(resolve, 1000);
-              // timeout = setTimeout(() => reject(new Error(`Close event not received after 1s (dirty=${editor.document.isDirty}, untitled=${editor.document.isUntitled})`)), 1500);
-            })
-          })
+      function clearWorkspace() {
+        const T = 1000;
+        const editor = vscode.window.activeTextEditor;
+        if(editor) {
+          return vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+          // .then(() => {
+          //   let resolve, reject, timeout;
+          //   const d = vscode.workspace.onDidCloseTextDocument((e) => {
+          //     d.dispose();
+          //     clearTimeout(timeout);
+          //     resolve();
+          //   });
+          //   return new Promise((r1, r2) => {
+          //     resolve = r1;
+          //     reject = r2;
+
+          //     timeout = setTimeout(resolve, T);
+          //     // timeout = setTimeout(() => reject(new Error(`Close event not received after ${T/1000}s (dirty=${editor.document.isDirty}, untitled=${editor.document.isUntitled})`)), T);
+          //   })
+          // })
           .then(clearWorkspace);
         } else {
           console.log('workspace cleaned');
@@ -109,18 +116,21 @@ function buildTest(data, file) {
     })
 
     withKite(kiteSetup(data.setup.kited), () => {
-      withKitePaths(pathsSetup(data.setup), undefined, () => {
+      withKitePaths({}, undefined, () => {
+        beforeEach(() => {
+          updateKitePaths(pathsSetup(data.setup, root))
+        })
         withKiteRoutes([
           [o => o.path === '/clientapi/plan', o => fakeResponse(200, '{}')]
         ])
         data.test.reverse().reduce((f, s) => {
           switch (s.step) {
             case 'action':
-              return buildAction(s, f);
+              return buildAction(s, f, root);
             case 'expect':
-              return buildExpectation(s, f);
+              return buildExpectation(s, f, root);
             case 'expect_not':
-              return buildExpectation(s, f, true);
+              return buildExpectation(s, f, root, true);
             default:
               return f;
           }
@@ -130,9 +140,9 @@ function buildTest(data, file) {
   });
 }
 
-function buildAction(action, block) {
+function buildAction(action, block, root) {
   return () => describe(action.description, () => {
-    ACTIONS[action.type] && ACTIONS[action.type](action);
+    ACTIONS[action.type] && ACTIONS[action.type]({action, root});
 
     describe('', () => {
       block && block();
@@ -140,10 +150,10 @@ function buildAction(action, block) {
   });
 }
 
-function buildExpectation(expectation, block, not) {
+function buildExpectation(expectation, block, root, not) {
   return () => {
   
-    EXPECTATIONS[expectation.type] && EXPECTATIONS[expectation.type](expectation, not);
+    EXPECTATIONS[expectation.type] && EXPECTATIONS[expectation.type]({expectation, root, not});
   
     describe('', () => {
       block && block();
