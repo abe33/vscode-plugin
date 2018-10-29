@@ -27,12 +27,7 @@ module.exports = ({action, root}) => {
       })
     })
     .then(() => vscode.window.showTextDocument(vscode.Uri.file(filename)))
-    .then((editor) => {
-      const newPosition = new vscode.Position(0, 0);
-      const newSelection = new vscode.Selection(newPosition, newPosition);
-      editor.selection = newSelection
-      return editor;
-    })
+    
     .then((editor) => 
       /\.py$/.test(path.extname(editor.document.fileName)) && 
       waitsFor(`kite editor focus event`, () => 

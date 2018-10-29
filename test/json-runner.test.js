@@ -88,25 +88,9 @@ function buildTest(data, file) {
       return clearWorkspace();
 
       function clearWorkspace() {
-        const T = 1000;
         const editor = vscode.window.activeTextEditor;
         if(editor) {
           return vscode.commands.executeCommand('workbench.action.closeActiveEditor')
-          // .then(() => {
-          //   let resolve, reject, timeout;
-          //   const d = vscode.workspace.onDidCloseTextDocument((e) => {
-          //     d.dispose();
-          //     clearTimeout(timeout);
-          //     resolve();
-          //   });
-          //   return new Promise((r1, r2) => {
-          //     resolve = r1;
-          //     reject = r2;
-
-          //     timeout = setTimeout(resolve, T);
-          //     // timeout = setTimeout(() => reject(new Error(`Close event not received after ${T/1000}s (dirty=${editor.document.isDirty}, untitled=${editor.document.isUntitled})`)), T);
-          //   })
-          // })
           .then(clearWorkspace);
         } else {
           console.log('workspace cleaned');
