@@ -89,6 +89,7 @@ function buildTest(data, file) {
 
       function clearWorkspace() {
         const editor = vscode.window.activeTextEditor;
+        console.log(vscode.workspace.textDocuments.length);
         if(editor) {
           return vscode.commands.executeCommand('workbench.action.closeActiveEditor')
           .then(clearWorkspace);
