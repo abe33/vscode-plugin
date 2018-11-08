@@ -12,13 +12,11 @@ const KiteSignatureProvider = require('./signature');
 const KiteDefinitionProvider = require('./definition');
 const KiteInstall = require('./install');
 const KiteStatus = require('./status-webview');
-const KiteTour = require('./tour');
 const KiteEditor = require('./kite-editor');
 const EditorEvents = require('./events');
 const localconfig = require('./localconfig');
 const metrics = require('./metrics');
 const Plan = require('./plan');
-const server = require('./server');
 const {projectDirPath, shouldNotifyPath, statusPath, languagesPath, hoverPath} = require('./urls');
 const Rollbar = require('rollbar');
 const {editorsForDocument, promisifyReadResponse, compact, params, kiteOpen} = require('./utils');
@@ -62,15 +60,12 @@ const Kite = {
 
     const install = new KiteInstall(Kite);
     const status = new KiteStatus(Kite);
-    const tour = new KiteTour(Kite);
-    // const errorRescue = new KiteErrorRescue(Kite);
 
     Logger.LEVEL = Logger.LEVELS[vscode.workspace.getConfiguration('kite').loggingLevel.toUpperCase()];
 
     // send the activated event
     metrics.track('activated');
 
-    this.disposables.push(server);
     this.disposables.push(status);
     this.disposables.push(install);
     // this.disposables.push(errorRescue);
@@ -79,29 +74,8 @@ const Kite = {
     this.install = install;
     // this.errorRescue = errorRescue;
 
-    server.addRoute('GET', '/check', (req, res) => {
-      this.checkState('/check route');
-      res.writeHead(200);
-      res.end();
-    });
-
-    server.addRoute('GET', '/count', (req, res, url) => {
-      const {metric, name} = params(url);
-      if (metric === 'requested') {
-        metrics.featureRequested(name);
-      } else if (metric === 'fulfilled') {
-        metrics.featureFulfilled(name);
-      }
-      res.writeHead(200);
-      res.end();
-    });
-
-    server.start();
-
     this.disposables.push(
       vscode.workspace.registerTextDocumentContentProvider('kite-vscode-install', install));
-    this.disposables.push(
-      vscode.workspace.registerTextDocumentContentProvider('kite-vscode-tour', tour));
 
     this.disposables.push(
       vscode.languages.registerHoverProvider(PYTHON_MODE, new KiteHoverProvider(Kite)));
