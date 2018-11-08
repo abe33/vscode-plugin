@@ -2,7 +2,7 @@
 
 const expect = require('expect.js');
 const vscode = require('vscode');
-const KiteStatus = require('../src/status');
+const KiteStatus = require('../src/status-webview');
 const {kite: Kite} = require('../src/kite');
 const {fixtureURI, withPlan} = require('./helpers');
 
@@ -14,7 +14,7 @@ const dot = '•';
 let status;
 const loadStatus = () => {
   beforeEach(() => {
-    return status.provideTextDocumentContent()
+    return status.getHTML()
           .then(html => document.body.innerHTML = html)
           .catch(err => console.log(err));
   });
@@ -192,7 +192,8 @@ describe('status panel', () => {
         const link = document.querySelector('.split-line .right a');
         expect(link).not.to.be(null);
         expect(link.textContent).to.eql("What's this?");
-        expect(link.href).to.eql('command:kite.web-url?%22https://help.kite.com/article/65-kite-pro%22');
+        expect(link.getAttribute('onclick'))
+        .to.eql("vscode.postMessage({command: 'command', name:'kite.web-url', args:['https://help.kite.com/article/65-kite-pro']})");
       });
     });
 
@@ -217,7 +218,8 @@ describe('status panel', () => {
         const link = document.querySelector('.split-line .right a');
         expect(link).not.to.be(null);
         expect(link.textContent).to.eql('Upgrade');
-        expect(link.href).to.eql('command:kite.web-url?%22http://localhost:46624/redirect/pro%22');
+        expect(link.getAttribute('onclick'))
+        .to.eql("vscode.postMessage({command: 'command', name:'kite.web-url', args:['http://localhost:46624/redirect/pro']})");
       });
     });
 
@@ -242,7 +244,8 @@ describe('status panel', () => {
         const link = document.querySelector('.split-line .right a');
         expect(link).not.to.be(null);
         expect(link.textContent).to.eql('Upgrade');
-        expect(link.href).to.eql('command:kite.web-url?%22http://localhost:46624/redirect/pro%22');
+        expect(link.getAttribute('onclick'))
+        .to.eql("vscode.postMessage({command: 'command', name:'kite.web-url', args:['http://localhost:46624/redirect/pro']})");
       });
     });
 
@@ -269,7 +272,8 @@ describe('status panel', () => {
         const link = document.querySelector('.split-line .right a');
         expect(link).not.to.be(null);
         expect(link.textContent).to.eql('Start Pro trial');
-        expect(link.href).to.eql('command:kite.web-url?%22http://localhost:46624/redirect/trial%22');
+        expect(link.getAttribute('onclick'))
+        .to.eql("vscode.postMessage({command: 'command', name:'kite.web-url', args:['http://localhost:46624/redirect/trial']})");
       });
     });
 
@@ -296,7 +300,8 @@ describe('status panel', () => {
         const link = document.querySelector('.split-line .right a');
         expect(link).not.to.be(null);
         expect(link.textContent).to.eql('Upgrade');
-        expect(link.href).to.eql('command:kite.web-url?%22http://localhost:46624/redirect/pro%22');
+        expect(link.getAttribute('onclick'))
+        .to.eql("vscode.postMessage({command: 'command', name:'kite.web-url', args:['http://localhost:46624/redirect/pro']})");
       });
 
       describe('when the user has a verified email', () => {
